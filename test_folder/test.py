@@ -38,7 +38,7 @@ asks_call_10 = []
 
 
 
-with open('Coin_rawdata_2018-05-04.csv', newline='') as csvfile:
+with open('miner-test.csv', newline='') as csvfile:
     spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
     for row in spamreader:
         name.append(row[0])
@@ -85,7 +85,7 @@ raw_data1 = np.stack([average_price, bids_price, asks_price, bids_call_10, bids_
 df = pd.DataFrame(raw_data1, columns=list_data)
 
 store = pd.HDFStore('store.h5')
-store['coin'] = df # save it
+store['data'] = df # save it
 
 store.close()
 
