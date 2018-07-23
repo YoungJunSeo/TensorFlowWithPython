@@ -1,28 +1,22 @@
 from aiohttp import web
+import asyncio
+import json
 
-async def handle(request):
-    name = request.match_info.get('name', "Anonymous")
-    text = "Hello, " + name
-    return web.Response(text=text)
 
-async def wshandle(request):
-    ws = web.WebSocketResponse()
-    await ws.prepare(request)
+async def handler(request):
+    return web.Response(text="Hello, world")
 
-    async for msg in ws:
-        if msg.type == web.WSMsgType.text:
-            await ws.send_str("Hello, {}".format(msg.data))
-        elif msg.type == web.WSMsgType.binary:
-            await ws.send_bytes(msg.data)
-        elif msg.type == web.WSMsgType.close:
-            break
-
-    return ws
-
+async def post_handler(request):
+    data = await request.post()
+    print(len(data))
+    print(data['key1'])
+    print(data['key2'])
+    data = {'some': 'data'}
+    return web.json_response(data)
 
 app = web.Application()
-app.add_routes([web.get('/', handle),
-                web.get('/echo', wshandle),
-                web.get('/{name}', handle)])
+app.add_routes([web.get('/', handler),
+                web.post('/post', post_handler)])
+
 
 web.run_app(app, host="localhost", port=44520)
