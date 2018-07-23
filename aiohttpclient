@@ -11,6 +11,7 @@ datas = [1,2,3,4,5,6,7,8,9,0]
 
 async def post(session, url, data):
     async with session.post(url, data=data) as response:
+        assert response.status == 200
         return await response.json()
 
 async def get(session, url):
