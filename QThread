@@ -11,6 +11,8 @@ class MyMainGUI(QDialog):
         self.btn2 = QPushButton("Stop", self)
         self.btn3 = QPushButton("add 100", self)
         self.btn4 = QPushButton("send instance", self)
+        self.btn5 = QPushButton("Start2", self)
+        self.btn6 = QPushButton("Stop2", self)
 
         vbox = QVBoxLayout()
         vbox.addWidget(self.qtxt1)
@@ -18,6 +20,9 @@ class MyMainGUI(QDialog):
         vbox.addWidget(self.btn2)
         vbox.addWidget(self.btn3)
         vbox.addWidget(self.btn4)
+        vbox.addWidget(self.btn5)
+        vbox.addWidget(self.btn6)
+
         self.setLayout(vbox)
 
         self.setGeometry(100, 50, 300, 300)
@@ -38,11 +43,19 @@ class MyMain(MyMainGUI):
         self.btn2.clicked.connect(self.time_stop)
         self.btn3.clicked.connect(self.add_sec)
         self.btn4.clicked.connect(self.send_instance)
+        self.btn5.clicked.connect(self.time_start2)
+        self.btn6.clicked.connect(self.time_stop2)
 
         self.th = Worker(parent=self)
         self.th.sec_changed.connect(self.time_update)  # custom signal from worker thread to main thread
         self.add_sec_signal.connect(self.th.add_sec)   # custom signal from main thread to worker thread
         self.send_instance_singal.connect(self.th.recive_instance_singal)
+        self.show()
+
+        self.th2= Worker2(parent=self)
+        self.th2.sec_changed.connect(self.time_update)  # custom signal from worker thread to main thread
+        self.add_sec_signal.connect(self.th2.add_sec)   # custom signal from main thread to worker thread
+        self.send_instance_singal.connect(self.th2.recive_instance_singal)
         self.show()
 
     @pyqtSlot()
@@ -53,6 +66,15 @@ class MyMain(MyMainGUI):
     @pyqtSlot()
     def time_stop(self):
         self.th.working = False
+
+    @pyqtSlot()
+    def time_start2(self):
+        self.th2.start()
+        self.th2.working = True
+
+    @pyqtSlot()
+    def time_stop2(self):
+        self.th2.working = False
 
     @pyqtSlot()
     def add_sec(self):
@@ -69,7 +91,6 @@ class MyMain(MyMainGUI):
         t1 = Test()
         t1.name = "SuperPower!!!"
         self.send_instance_singal.emit(t1)
-
 
 
 class Worker(QThread):
@@ -89,7 +110,7 @@ class Worker(QThread):
 
     def run(self):
         while self.working:
-            self.sec_changed.emit('time (secs)：{}'.format(self.sec))
+            self.sec_changed.emit('time1 (secs)：{}'.format(self.sec))
             self.sleep(1)
             self.sec += 1
 
@@ -97,6 +118,38 @@ class Worker(QThread):
     def add_sec(self):
         print("add_sec....")
         self.sec += 100
+
+    @pyqtSlot("PyQt_PyObject")    # @pyqtSlot(object) 도 가능..
+    def recive_instance_singal(self, inst):
+        print(inst.name)
+
+
+
+class Worker2(QThread):
+    sec_changed = pyqtSignal(str)
+
+    def __init__(self, sec2=0, parent=None):
+        super().__init__()
+        self.main = parent
+        self.working = True
+        self.sec2 = sec2
+
+        # self.main.add_sec_signal.connect(self.add_sec)   # 이것도 작동함. # custom signal from main thread to worker thread
+
+    def __del__(self):
+        print(".... end thread.....")
+        self.wait()
+
+    def run(self):
+        while self.working:
+            self.sec_changed.emit('time2 (secs)：{}'.format(self.sec2))
+            self.sleep(2)
+            self.sec2 += 2
+
+    @pyqtSlot()
+    def add_sec(self):
+        print("add_sec....")
+        self.sec2 += 100
 
     @pyqtSlot("PyQt_PyObject")    # @pyqtSlot(object) 도 가능..
     def recive_instance_singal(self, inst):
